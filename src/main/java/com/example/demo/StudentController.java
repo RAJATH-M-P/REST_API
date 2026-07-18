@@ -1,22 +1,25 @@
 package com.example.demo;
 
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/students")
 public class StudentController {
 
-    List<String> students = new ArrayList<>();
+    private final StudentRepository repository;
+
+    public StudentController(StudentRepository repository) {
+        this.repository = repository;
+    }
 
     @GetMapping
-    public List<String> getStudents() {
-        return students;
+    public List<Student> getStudents() {
+        return repository.findAll();
     }
 
     @PostMapping
-    public String addStudent(@RequestBody String student) {
-        students.add(student);
-        return "Student Added";
+    public Student addStudent(@RequestBody Student student) {
+        return repository.save(student);
     }
 }
