@@ -1,55 +1,67 @@
 # REST_API
 
-A simple Spring Boot REST API project for managing a list of students.
+Spring Boot REST API for managing `Student` entities (JPA + MySQL).
 
 ## Overview
 
-This project is a minimal Spring Boot application that demonstrates a basic RESTful API with in-memory data storage.
-The API provides endpoints to retrieve the current list of students and add new student names during the running session.
+This project is a simple Spring Boot application exposing a REST API backed by Spring Data JPA. It stores `Student` records in a MySQL database configured in `src/main/resources/application.properties`.
 
 ## Project Structure
 
 - `src/main/java/com/example/demo/DemoApplication.java` - Spring Boot application entry point
-- `src/main/java/com/example/demo/StudentController.java` - REST controller with student endpoints
-- `src/main/resources/application.properties` - Spring Boot configuration file
-- `pom.xml` - Maven build file and dependency list
+- `src/main/java/com/example/demo/StudentController.java` - REST controller providing `/students` endpoints
+- `src/main/java/com/example/demo/Student.java` - JPA entity representing a student
+- `src/main/java/com/example/demo/StudentRepository.java` - Spring Data JPA repository
+- `src/main/resources/application.properties` - application configuration (database, port)
+- `pom.xml` - Maven build file and dependencies
+
+## Configuration
+
+The application is configured to run on port `8081` (see `server.port`) and connects to a MySQL database using the following defaults from `application.properties`:
+
+- JDBC URL: `jdbc:mysql://mysql-db:3306/studentdb`
+- Username: `root`
+- Password: `root123`
+
+These settings match the included `docker-compose.yml`, which defines a `mysql-db` service.
 
 ## API Endpoints
 
 ### GET /students
 
-Returns the current list of student names as a JSON array.
+Returns a JSON array of `Student` objects. Each object has `id` and `name` fields.
 
-Response example:
+Example response:
 
 ```json
-["John Doe", "Jane Smith"]
+[ { "id": 1, "name": "John Doe" }, { "id": 2, "name": "Jane Smith" } ]
 ```
 
 ### POST /students
 
-Adds a new student name to the in-memory list.
+Creates a new `Student`. The endpoint expects a JSON body with a `name` property and returns the persisted `Student` (including generated `id`).
 
-Request body example:
+Request example:
 
-```text
-John Doe
+```json
+{ "name": "John Doe" }
 ```
 
-Response:
+Response example:
 
-```text
-Student Added
+```json
+{ "id": 1, "name": "John Doe" }
 ```
 
 ## Requirements
 
 - Java 17 or later
 - Maven (wrapper included)
+- Docker & Docker Compose (optional, recommended for running MySQL locally)
 
-## Build and Run
+## Build and Run (Local)
 
-From the project root directory:
+From the project root:
 
 ```bash
 ./mvnw clean package
@@ -63,33 +75,40 @@ On Windows PowerShell:
 ./mvnw.cmd spring-boot:run
 ```
 
-The application starts on port `8080` by default.
+The application listens on port `8081` by default.
+
+## Run with Docker Compose
+
+The repository includes a `docker-compose.yml` that starts a MySQL container and the Spring Boot app. To run both services:
+
+```bash
+docker-compose up --build
+```
+
+This exposes the app on `http://localhost:8081` and the MySQL server on `3306`.
 
 ## Example Requests
 
 Retrieve all students:
 
 ```bash
-curl http://localhost:8080/students
+curl http://localhost:8081/students
 ```
 
 Add a student:
 
 ```bash
-curl -X POST http://localhost:8080/students -H "Content-Type: text/plain" -d "John Doe"
+curl -X POST http://localhost:8081/students -H "Content-Type: application/json" -d '{"name":"John Doe"}'
 ```
 
-## Development Notes
+## Notes
 
-- The student list is stored in memory and resets every time the application restarts.
-- This project uses Spring Boot `3.5.14` and `spring-boot-starter-web`.
-- It is intended as a starting point for learning Spring Boot REST APIs.
+- Data is persisted to MySQL (not in-memory). The database and credentials are configured in `application.properties` and `docker-compose.yml`.
+- The project uses Spring Boot `3.5.14`, `spring-boot-starter-web`, and `spring-boot-starter-data-jpa`.
 
-## Next Steps
+## Next Steps / Improvements
 
-Possible improvements:
-
-- Add validation and JSON request support for student objects
-- Persist data using a database like H2, PostgreSQL, or MySQL
-- Add error handling and logging
-- Implement tests for controller behavior
+- Add input validation and error handling for the controller
+- Add integration tests that run against a testcontainer or H2
+- Provide environment variable overrides for database configuration
+- Add endpoints for update/delete and pagination
