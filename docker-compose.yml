@@ -6,6 +6,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: studentdb
+<<<<<<< HEAD
+=======
+    ports:
+      - "3306:3306"
+>>>>>>> e49a2be218bc9ea152bfb0baac163996370cd3f3
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
       interval: 10s
@@ -19,4 +24,8 @@ services:
       mysql-db:
         condition: service_healthy
     ports:
+<<<<<<< HEAD
       - "8081:8081"
+=======
+      - "8081:8081"
+>>>>>>> e49a2be218bc9ea152bfb0baac163996370cd3f3
