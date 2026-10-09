@@ -1,114 +1,139 @@
-# REST_API
+# Student REST API
 
-Spring Boot REST API for managing `Student` entities (JPA + MySQL).
+A small REST API built with Spring Boot for creating and listing students. Student records are stored in MySQL using Spring Data JPA.
 
-## Overview
+## Features
 
-This project is a simple Spring Boot application exposing a REST API backed by Spring Data JPA. It stores `Student` records in a MySQL database configured in `src/main/resources/application.properties`.
+- `GET /students` returns all students.
+- `POST /students` creates a student and returns the saved record.
+- MySQL persistence with a generated student ID.
+- Docker Compose configuration for running the API and database together.
 
-## Project Structure
+## Technology
 
-- `src/main/java/com/example/demo/DemoApplication.java` - Spring Boot application entry point
-- `src/main/java/com/example/demo/StudentController.java` - REST controller providing `/students` endpoints
-- `src/main/java/com/example/demo/Student.java` - JPA entity representing a student
-- `src/main/java/com/example/demo/StudentRepository.java` - Spring Data JPA repository
-- `src/main/resources/application.properties` - application configuration (database, port)
-- `pom.xml` - Maven build file and dependencies
-
-## Configuration
-
-The application is configured to run on port `8081` (see `server.port`) and connects to a MySQL database using the following defaults from `application.properties`:
-
-- JDBC URL: `jdbc:mysql://mysql-db:3306/studentdb`
-- Username: `root`
-- Password: `root123`
-
-These settings match the included `docker-compose.yml`, which defines a `mysql-db` service.
-
-## API Endpoints
-
-### GET /students
-
-Returns a JSON array of `Student` objects. Each object has `id` and `name` fields.
-
-Example response:
-
-```json
-[ { "id": 1, "name": "John Doe" }, { "id": 2, "name": "Jane Smith" } ]
-```
-
-### POST /students
-
-Creates a new `Student`. The endpoint expects a JSON body with a `name` property and returns the persisted `Student` (including generated `id`).
-
-Request example:
-
-```json
-{ "name": "John Doe" }
-```
-
-Response example:
-
-```json
-{ "id": 1, "name": "John Doe" }
-```
-
-## Requirements
-
-- Java 17 or later
-- Maven (wrapper included)
-- Docker & Docker Compose (optional, recommended for running MySQL locally)
-
-## Build and Run (Local)
-
-From the project root:
-
-```bash
-./mvnw clean package
-./mvnw spring-boot:run
-```
-
-On Windows PowerShell:
-
-```powershell
-./mvnw.cmd clean package
-./mvnw.cmd spring-boot:run
-```
-
-The application listens on port `8081` by default.
+- Java 17
+- Spring Boot 3.5.14
+- Spring Web
+- Spring Data JPA / Hibernate
+- MySQL 8
+- Maven
 
 ## Run with Docker Compose
 
-The repository includes a `docker-compose.yml` that starts a MySQL container and the Spring Boot app. To run both services:
+You will need Docker and the Docker Compose plugin. From the project root, run:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-This exposes the app on `http://localhost:8081` and the MySQL server on `3306`.
+Compose builds and starts the API and MySQL, waiting for the database health check before starting the API. The API is available at `http://localhost:8081`.
 
-## Example Requests
+To stop the services:
 
-Retrieve all students:
+```bash
+docker compose down
+```
+
+The database settings and development credentials are defined in `docker-compose.yml` and `src/main/resources/application.properties`. These defaults are intended for local development only; change them before using this project in a shared or production environment.
+
+## API
+
+### List students
+
+```http
+GET /students
+```
+
+Example:
 
 ```bash
 curl http://localhost:8081/students
 ```
 
-Add a student:
+Response:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "John Doe"
+  }
+]
+```
+
+An empty database returns an empty array: `[]`.
+
+### Create a student
+
+```http
+POST /students
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "name": "John Doe"
+}
+```
+
+Example:
 
 ```bash
-curl -X POST http://localhost:8081/students -H "Content-Type: application/json" -d '{"name":"John Doe"}'
+curl -X POST http://localhost:8081/students \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe"}'
+```
+
+The response contains the saved student, including its generated `id`:
+
+```json
+{
+  "id": 1,
+  "name": "John Doe"
+}
+```
+
+## Build
+
+The project includes a Maven wrapper. To build the application JAR without running tests:
+
+```bash
+./mvnw clean package -DskipTests
+```
+
+On Windows PowerShell:
+
+```powershell
+.\mvnw.cmd clean package -DskipTests
+```
+
+The included Spring Boot test loads the application context and needs a reachable MySQL database using the configured datasource settings.
+
+## Project layout
+
+```text
+src/
+  main/
+    java/com/example/demo/
+      DemoApplication.java       # Spring Boot entry point
+      Student.java               # JPA entity
+      StudentController.java     # REST endpoints
+      StudentRepository.java     # Spring Data JPA repository
+    resources/
+      application.properties     # Application and database configuration
+  test/
+    java/com/example/demo/
+      DemoApplicationTests.java  # Application context test
+Dockerfile                       # Multi-stage image build
+docker-compose.yml               # API and MySQL services
+pom.xml                          # Maven dependencies and build
 ```
 
 ## Notes
 
-- Data is persisted to MySQL (not in-memory). The database and credentials are configured in `application.properties` and `docker-compose.yml`.
-- The project uses Spring Boot `3.5.14`, `spring-boot-starter-web`, and `spring-boot-starter-data-jpa`.
-
-## Next Steps / Improvements
-
-- Add input validation and error handling for the controller
-- Add integration tests that run against a testcontainer or H2
-- Provide environment variable overrides for database configuration
-- Add endpoints for update/delete and pagination
+- The API listens on port `8081`.
+- The `Student` entity has a generated `id` and a `name`.
+- Hibernate is configured to update the database schema automatically (`spring.jpa.hibernate.ddl-auto=update`).
+- Only list and create endpoints are currently implemented; update and delete endpoints are not included.
